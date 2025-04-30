@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addMonths } from "date-fns";
@@ -17,7 +18,7 @@ export const useRealTimeMembers = () => {
       try {
         const { data, error } = await supabase
           .from("membership_plans")
-          .select("*");
+          .select("*") as { data: SupabaseMembershipPlan[], error: any };
         
         if (error) {
           throw error;
@@ -52,7 +53,7 @@ export const useRealTimeMembers = () => {
         // Fetch members
         const { data: membersData, error: membersError } = await supabase
           .from("gym_members")
-          .select("*");
+          .select("*") as { data: SupabaseGymMember[], error: any };
           
         if (membersError) {
           throw membersError;
@@ -64,7 +65,7 @@ export const useRealTimeMembers = () => {
           const { data: paymentsData, error: paymentsError } = await supabase
             .from("payments")
             .select("*")
-            .in("member_id", memberIds);
+            .in("member_id", memberIds) as { data: any[], error: any };
             
           if (paymentsError) {
             throw paymentsError;
@@ -129,7 +130,7 @@ export const useRealTimeMembers = () => {
       .channel('public:gym_members')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'gym_members' },
-        payload => {
+        (payload: any) => {
           const newMember = payload.new as SupabaseGymMember;
           const memberPlan = plans.find(p => p.id === newMember.membership_plan_id) || {
             id: "default",
@@ -157,7 +158,7 @@ export const useRealTimeMembers = () => {
       )
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'gym_members' },
-        payload => {
+        (payload: any) => {
           const updatedMember = payload.new as SupabaseGymMember;
           
           setMembers(currentMembers => 
@@ -184,7 +185,7 @@ export const useRealTimeMembers = () => {
       )
       .on('postgres_changes',
         { event: 'DELETE', schema: 'public', table: 'gym_members' },
-        payload => {
+        (payload: any) => {
           setMembers(currentMembers => 
             currentMembers.filter(member => member.id !== payload.old.id)
           );
@@ -229,7 +230,7 @@ export const useRealTimeMembers = () => {
           payment_method: memberData.paymentMethod
         })
         .select()
-        .single();
+        .single() as { data: any, error: any };
         
       if (error) {
         throw error;
@@ -248,7 +249,7 @@ export const useRealTimeMembers = () => {
         
         const { error: paymentError } = await supabase
           .from('payments')
-          .insert(paymentData);
+          .insert(paymentData) as { error: any };
           
         if (paymentError) {
           console.error("Error creating payment record:", paymentError);
@@ -273,7 +274,7 @@ export const useRealTimeMembers = () => {
           phone: updatedMember.phone,
           payment_method: updatedMember.paymentMethod
         })
-        .eq('id', updatedMember.id);
+        .eq('id', updatedMember.id) as { error: any };
         
       if (error) {
         throw error;
@@ -290,7 +291,7 @@ export const useRealTimeMembers = () => {
       const { error } = await supabase
         .from('gym_members')
         .delete()
-        .eq('id', id);
+        .eq('id', id) as { error: any };
         
       if (error) {
         throw error;
@@ -316,7 +317,7 @@ export const useRealTimeMembers = () => {
           notes: paymentData.notes
         })
         .select()
-        .single();
+        .single() as { data: any, error: any };
         
       if (paymentError) {
         throw paymentError;
@@ -348,7 +349,7 @@ export const useRealTimeMembers = () => {
             subscription_end_date: newEndDate.toISOString(),
             status: status
           })
-          .eq('id', paymentData.memberId);
+          .eq('id', paymentData.memberId) as { error: any };
           
         if (updateError) {
           console.error("Error updating member subscription:", updateError);
