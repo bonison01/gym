@@ -4,13 +4,12 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Outlet } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
+export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex">
@@ -47,7 +46,9 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* Page Content */}
-        <main className="p-4 md:p-8">{children}</main>
+        <main className="p-4 md:p-8">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

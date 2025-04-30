@@ -1,9 +1,29 @@
 
 import { MembersTable } from "@/components/members/MembersTable";
-import { useAppContext } from "@/context/AppContext";
+import { useAppContext } from "@/context/AuthContext";
+import { Spinner } from "@/components/Spinner";
 
 const Members = () => {
-  const { members } = useAppContext();
+  const { members, loading, error } = useAppContext();
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spinner />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading members</p>
+          <p className="text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">

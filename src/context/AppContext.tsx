@@ -1,100 +1,98 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Member, MembershipPlan, Payment, MemberStatus, PaymentMethod, PaymentStatus } from '@/types';
-import { sampleMembers, membershipPlans, getDashboardStats } from '@/lib/mockData';
-import { addMonths } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
+import { getDashboardStats } from '@/lib/mockData';
+import { useRealTimeMembers } from '@/hooks/useRealTimeMembers';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppContextProps {
   members: Member[];
   plans: MembershipPlan[];
-  addMember: (member: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => void;
-  updateMember: (member: Member) => void;
-  deleteMember: (id: string) => void;
+  addMember: (member: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => Promise<any>;
+  updateMember: (member: Member) => Promise<void>;
+  deleteMember: (id: string) => Promise<void>;
   getMember: (id: string) => Member | undefined;
-  addPayment: (payment: Omit<Payment, 'id'>) => void;
+  addPayment: (payment: Omit<Payment, 'id'>) => Promise<any>;
   recalculateStatus: () => void;
   getUpcomingRenewals: (days: number) => Member[];
   getStats: () => ReturnType<typeof getDashboardStats>;
+  loading: boolean;
+  error: string | null;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [members, setMembers] = useState<Member[]>(sampleMembers);
-  const [plans] = useState<MembershipPlan[]>(membershipPlans);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { 
+    members, 
+    plans, 
+    loading, 
+    error, 
+    addMember: addRealTimeMember,
+    updateMember: updateRealTimeMember,
+    deleteMember: deleteRealTimeMember,
+    addPayment: addRealTimePayment
+  } = useRealTimeMembers();
 
-  const addMember = (memberData: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => {
-    // Create initial payment
-    const initialPayment: Payment = {
-      id: uuidv4(),
-      memberId: uuidv4(), // Temporary ID, will be replaced
-      amount: memberData.membershipPlan.amount,
-      date: memberData.joinDate,
-      method: memberData.paymentMethod || PaymentMethod.CASH, // Use enum value with fallback
-      status: PaymentStatus.PAID, // Use enum value
-      notes: 'Initial membership payment'
-    };
-
-    // Calculate end date based on plan duration
-    const subscriptionEndDate = addMonths(
-      memberData.joinDate,
-      memberData.membershipPlan.durationMonths
-    );
-
-    // Determine status
-    const now = new Date();
-    let status = MemberStatus.ACTIVE;
-    if (subscriptionEndDate < now) {
-      status = MemberStatus.EXPIRED;
-    } else if (subscriptionEndDate.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      status = MemberStatus.EXPIRING_SOON;
-    }
-
-    // Create new member
-    const newMember: Member = {
-      ...memberData,
-      id: uuidv4(),
-      status,
-      subscriptionEndDate,
-      paymentHistory: [initialPayment]
-    };
-
-    // Fix the memberId in the payment to match the new member's id
-    newMember.paymentHistory[0].memberId = newMember.id;
-
-    setMembers(prev => [...prev, newMember]);
-    toast({ 
-      title: "Member Added", 
-      description: `${newMember.name} has been added successfully.`
-    });
-
-    return newMember;
-  };
-
-  const updateMember = (updatedMember: Member) => {
-    setMembers(prev => 
-      prev.map(member => 
-        member.id === updatedMember.id ? updatedMember : member
-      )
-    );
-    toast({ 
-      title: "Member Updated", 
-      description: `${updatedMember.name}'s information has been updated.`
-    });
-  };
-
-  const deleteMember = (id: string) => {
-    const memberToDelete = members.find(m => m.id === id);
-    setMembers(prev => prev.filter(member => member.id !== id));
-    
-    if (memberToDelete) {
+  const addMember = async (memberData: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => {
+    try {
+      const result = await addRealTimeMember(memberData);
+      
       toast({ 
-        title: "Member Deleted", 
-        description: `${memberToDelete.name} has been removed from the system.`
+        title: "Member Added", 
+        description: `${memberData.name} has been added successfully.`
       });
+      
+      return result;
+    } catch (error: any) {
+      toast({ 
+        title: "Error Adding Member", 
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const updateMember = async (updatedMember: Member) => {
+    try {
+      await updateRealTimeMember(updatedMember);
+      
+      toast({ 
+        title: "Member Updated", 
+        description: `${updatedMember.name}'s information has been updated.`
+      });
+    } catch (error: any) {
+      toast({ 
+        title: "Error Updating Member", 
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const deleteMember = async (id: string) => {
+    try {
+      const memberToDelete = members.find(m => m.id === id);
+      await deleteRealTimeMember(id);
+      
+      if (memberToDelete) {
+        toast({ 
+          title: "Member Deleted", 
+          description: `${memberToDelete.name} has been removed from the system.`
+        });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Error Deleting Member", 
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
     }
   };
 
@@ -102,37 +100,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return members.find(member => member.id === id);
   };
 
-  const addPayment = (paymentData: Omit<Payment, 'id'>) => {
-    const newPayment: Payment = {
-      ...paymentData,
-      id: uuidv4()
-    };
-
-    setMembers(prev => prev.map(member => {
-      if (member.id === paymentData.memberId) {
-        const updatedMember = {
-          ...member,
-          paymentHistory: [...member.paymentHistory, newPayment]
-        };
-        
-        // Update subscription end date based on new payment
-        updatedMember.subscriptionEndDate = addMonths(
-          new Date(paymentData.date),
-          member.membershipPlan.durationMonths
-        );
-        
-        // Update member status
-        updatedMember.status = calculateMemberStatus(updatedMember.subscriptionEndDate);
-        
-        return updatedMember;
-      }
-      return member;
-    }));
-
-    toast({ 
-      title: "Payment Recorded", 
-      description: `Payment of ₹${paymentData.amount} has been recorded successfully.`
-    });
+  const addPayment = async (paymentData: Omit<Payment, 'id'>) => {
+    try {
+      const result = await addRealTimePayment(paymentData);
+      
+      toast({ 
+        title: "Payment Recorded", 
+        description: `Payment of ₹${paymentData.amount} has been recorded successfully.`
+      });
+      
+      return result;
+    } catch (error: any) {
+      toast({ 
+        title: "Error Recording Payment", 
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const calculateMemberStatus = (endDate: Date): MemberStatus => {
@@ -146,10 +131,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const recalculateStatus = () => {
-    setMembers(prev => prev.map(member => ({
-      ...member,
-      status: calculateMemberStatus(member.subscriptionEndDate)
-    })));
+    // This is now handled by the database with real-time updates
+    console.log("Status recalculation now happens automatically with real-time updates");
   };
 
   const getUpcomingRenewals = (days: number) => {
@@ -165,7 +148,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getStats = () => {
-    return getDashboardStats();
+    // Calculate real statistics from actual data instead of using mock data
+    const now = new Date();
+    const activeMembers = members.filter(m => m.status === MemberStatus.ACTIVE).length;
+    const expiringSoon = members.filter(m => m.status === MemberStatus.EXPIRING_SOON).length;
+    const expired = members.filter(m => m.status === MemberStatus.EXPIRED).length;
+    
+    // Calculate monthly revenue (payments made this month)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyRevenue = members.reduce((total, member) => {
+      const paymentsThisMonth = member.paymentHistory.filter(p => {
+        const paymentDate = new Date(p.date);
+        return paymentDate >= startOfMonth && paymentDate <= now;
+      });
+      
+      const memberRevenue = paymentsThisMonth.reduce((sum, payment) => sum + payment.amount, 0);
+      return total + memberRevenue;
+    }, 0);
+    
+    return {
+      totalMembers: members.length,
+      activeMembers,
+      expiringSoon,
+      expired,
+      monthlyRevenue
+    };
   };
 
   return (
@@ -180,7 +187,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         addPayment,
         recalculateStatus,
         getUpcomingRenewals,
-        getStats
+        getStats,
+        loading,
+        error
       }}
     >
       {children}

@@ -8,20 +8,26 @@ import MemberDetail from "@/pages/MemberDetail";
 import EditMember from "@/pages/EditMember";
 import Payments from "@/pages/Payments";
 import NotFound from "@/pages/NotFound";
+import Auth from "@/pages/Auth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const Index = () => {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/members/new" element={<AddMember />} />
-        <Route path="/members/:id" element={<MemberDetail />} />
-        <Route path="/members/:id/edit" element={<EditMember />} />
-        <Route path="/payments" element={<Payments />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/members/new" element={<AddMember />} />
+          <Route path="/members/:id" element={<MemberDetail />} />
+          <Route path="/members/:id/edit" element={<EditMember />} />
+          <Route path="/payments" element={<Payments />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 };
 

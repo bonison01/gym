@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
 import { Member, MembershipPlan, PaymentMethod } from "@/types";
@@ -18,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn, formatIndianRupee } from "@/lib/utils";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Spinner } from "@/components/Spinner";
 
 interface MemberFormProps {
   existingMember?: Member;
@@ -25,7 +26,7 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ existingMember, mode }: MemberFormProps) {
-  const { plans, addMember, updateMember } = useAppContext();
+  const { plans, addMember, updateMember, loading } = useAppContext();
   const navigate = useNavigate();
   
   const [name, setName] = useState(existingMember?.name || "");
@@ -38,39 +39,62 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     existingMember?.paymentMethod || PaymentMethod.CASH
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const selectedPlan = plans.find(plan => plan.id === selectedPlanId) || plans[0];
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // Update selectedPlanId when plans are loaded (if needed)
+  useEffect(() => {
+    if (plans.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(plans[0].id);
+    }
+  }, [plans, selectedPlanId]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    if (mode === "create") {
-      // Create new member
-      const newMember = {
-        name,
-        email,
-        phone,
-        joinDate,
-        membershipPlan: selectedPlan as MembershipPlan,
-        paymentMethod
-      };
-      
-      addMember(newMember);
-      navigate("/members");
-    } else if (existingMember) {
-      // Update existing member
-      const updatedMember = {
-        ...existingMember,
-        name,
-        email,
-        phone,
-        paymentMethod // Include payment method in updates
-      };
-      
-      updateMember(updatedMember);
-      navigate(`/members/${existingMember.id}`);
+    try {
+      if (mode === "create") {
+        // Create new member
+        const newMember = {
+          name,
+          email,
+          phone,
+          joinDate,
+          membershipPlan: selectedPlan as MembershipPlan,
+          paymentMethod
+        };
+        
+        await addMember(newMember);
+        navigate("/members");
+      } else if (existingMember) {
+        // Update existing member
+        const updatedMember = {
+          ...existingMember,
+          name,
+          email,
+          phone,
+          paymentMethod
+        };
+        
+        await updateMember(updatedMember);
+        navigate(`/members/${existingMember.id}`);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  
+  if (loading && mode === "edit") {
+    return (
+      <div className="flex justify-center py-10">
+        <Spinner />
+      </div>
+    );
+  }
   
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
@@ -182,14 +206,24 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
       </div>
       
       <div className="flex gap-4">
-        <Button type="submit">
-          {mode === "create" ? "Add Member" : "Update Member"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <span className="mr-2">
+                {mode === "create" ? "Adding..." : "Updating..."}
+              </span>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+            </>
+          ) : (
+            mode === "create" ? "Add Member" : "Update Member"
+          )}
         </Button>
         
         <Button
           type="button"
           variant="outline"
           onClick={() => navigate(-1)}
+          disabled={isSubmitting}
         >
           Cancel
         </Button>
