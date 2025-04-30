@@ -1,7 +1,7 @@
 
 import { cn } from "@/lib/utils";
 import { NavLink } from "react-router-dom";
-import { Users, Calendar, IndianRupee, X, LogOut } from "lucide-react";
+import { Users, Calendar, IndianRupee, X, LogOut, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -21,6 +21,11 @@ const routes = [
     title: "Payments",
     href: "/payments",
     icon: <IndianRupee className="mr-2 h-5 w-5" />,
+  },
+  {
+    title: "Pricing",
+    href: "/pricing",
+    icon: <DollarSign className="mr-2 h-5 w-5" />,
   },
 ];
 

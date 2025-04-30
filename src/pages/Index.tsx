@@ -7,6 +7,7 @@ import AddMember from "@/pages/AddMember";
 import MemberDetail from "@/pages/MemberDetail";
 import EditMember from "@/pages/EditMember";
 import Payments from "@/pages/Payments";
+import PricingStructures from "@/pages/PricingStructures";
 import NotFound from "@/pages/NotFound";
 import Auth from "@/pages/Auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -24,6 +25,7 @@ const Index = () => {
           <Route path="/members/:id" element={<MemberDetail />} />
           <Route path="/members/:id/edit" element={<EditMember />} />
           <Route path="/payments" element={<Payments />} />
+          <Route path="/pricing" element={<PricingStructures />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Route>
