@@ -1,6 +1,6 @@
 
 import { MembersTable } from "@/components/members/MembersTable";
-import { useAppContext } from "@/context/AuthContext";
+import { useAppContext } from "@/context/AppContext";
 import { Spinner } from "@/components/Spinner";
 
 const Members = () => {

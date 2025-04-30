@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { SupabaseMembershipPlan } from "@/types/supabase";
 
 export const useInitializeGym = () => {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export const useInitializeGym = () => {
         const { data: existingPlans, error: plansError } = await supabase
           .from('membership_plans')
           .select('id')
-          .limit(1);
+          .limit(1) as { data: any[], error: any };
           
         if (plansError) {
           throw plansError;
@@ -56,7 +57,7 @@ export const useInitializeGym = () => {
           
           const { error: insertError } = await supabase
             .from('membership_plans')
-            .insert(defaultPlans);
+            .insert(defaultPlans as any) as { error: any };
             
           if (insertError) {
             throw insertError;

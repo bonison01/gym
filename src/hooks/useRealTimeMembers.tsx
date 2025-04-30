@@ -1,30 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { addMonths } from "date-fns";
 import { Member, MemberStatus, MembershipPlan, PaymentMethod } from "@/types";
 import { v4 as uuidv4 } from "uuid";
-
-interface SupabaseGymMember {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  join_date: string;
-  membership_plan_id: string;
-  subscription_end_date: string;
-  status: string;
-  payment_method: string;
-  created_at: string;
-}
-
-interface SupabaseMembershipPlan {
-  id: string;
-  name: string;
-  duration_months: number;
-  amount: number;
-  description: string;
-}
+import { SupabaseGymMember, SupabaseMembershipPlan } from "@/types/supabase";
 
 export const useRealTimeMembers = () => {
   const [members, setMembers] = useState<Member[]>([]);
