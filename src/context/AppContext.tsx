@@ -1,6 +1,5 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { Member, MembershipPlan, Payment, MemberStatus } from '@/types';
+import { Member, MembershipPlan, Payment, MemberStatus, PaymentMethod, PaymentStatus } from '@/types';
 import { sampleMembers, membershipPlans, getDashboardStats } from '@/lib/mockData';
 import { addMonths } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,7 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface AppContextProps {
   members: Member[];
   plans: MembershipPlan[];
-  addMember: (member: Omit<Member, 'id' | 'status' | 'paymentHistory'>) => void;
+  addMember: (member: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => void;
   updateMember: (member: Member) => void;
   deleteMember: (id: string) => void;
   getMember: (id: string) => Member | undefined;
@@ -26,15 +25,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [plans] = useState<MembershipPlan[]>(membershipPlans);
   const { toast } = useToast();
 
-  const addMember = (memberData: Omit<Member, 'id' | 'status' | 'paymentHistory'>) => {
+  const addMember = (memberData: Omit<Member, 'id' | 'status' | 'paymentHistory' | 'subscriptionEndDate'>) => {
     // Create initial payment
     const initialPayment: Payment = {
       id: uuidv4(),
       memberId: uuidv4(), // Temporary ID, will be replaced
       amount: memberData.membershipPlan.amount,
       date: memberData.joinDate,
-      method: memberData.paymentMethod || "Cash", // Added this line to satisfy TypeScript
-      status: "Paid",
+      method: memberData.paymentMethod || PaymentMethod.CASH, // Use enum value
+      status: PaymentStatus.PAID, // Use enum value
       notes: 'Initial membership payment'
     };
 
