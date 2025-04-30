@@ -1,4 +1,3 @@
-
 export type Member = {
   id: string;
   name: string;
@@ -10,6 +9,7 @@ export type Member = {
   paymentHistory: Payment[];
   status: MemberStatus;
   photo?: string;
+  paymentMethod?: PaymentMethod; // Add this optional field to Member type
 }
 
 export type MembershipPlan = {

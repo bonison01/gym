@@ -36,7 +36,7 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
     existingMember?.membershipPlan.id || plans[0]?.id || ""
   );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    existingMember?.paymentHistory[0]?.method || PaymentMethod.CASH
+    existingMember?.paymentMethod || PaymentMethod.CASH
   );
   
   const selectedPlan = plans.find(plan => plan.id === selectedPlanId) || plans[0];
@@ -63,7 +63,8 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
         ...existingMember,
         name,
         email,
-        phone
+        phone,
+        paymentMethod // Include payment method in updates
       };
       
       updateMember(updatedMember);

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { Member, MembershipPlan, Payment, MemberStatus, PaymentMethod, PaymentStatus } from '@/types';
 import { sampleMembers, membershipPlans, getDashboardStats } from '@/lib/mockData';
@@ -32,7 +33,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       memberId: uuidv4(), // Temporary ID, will be replaced
       amount: memberData.membershipPlan.amount,
       date: memberData.joinDate,
-      method: memberData.paymentMethod || PaymentMethod.CASH, // Use enum value
+      method: memberData.paymentMethod || PaymentMethod.CASH, // Use enum value with fallback
       status: PaymentStatus.PAID, // Use enum value
       notes: 'Initial membership payment'
     };
