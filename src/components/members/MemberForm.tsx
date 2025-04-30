@@ -1,0 +1,198 @@
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "@/context/AppContext";
+import { Member, MembershipPlan, PaymentMethod } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { cn, formatIndianRupee } from "@/lib/utils";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+
+interface MemberFormProps {
+  existingMember?: Member;
+  mode: "create" | "edit";
+}
+
+export function MemberForm({ existingMember, mode }: MemberFormProps) {
+  const { plans, addMember, updateMember } = useAppContext();
+  const navigate = useNavigate();
+  
+  const [name, setName] = useState(existingMember?.name || "");
+  const [email, setEmail] = useState(existingMember?.email || "");
+  const [phone, setPhone] = useState(existingMember?.phone || "");
+  const [joinDate, setJoinDate] = useState<Date>(existingMember?.joinDate || new Date());
+  const [selectedPlanId, setSelectedPlanId] = useState(
+    existingMember?.membershipPlan.id || plans[0]?.id || ""
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    existingMember?.paymentHistory[0]?.method || PaymentMethod.CASH
+  );
+  
+  const selectedPlan = plans.find(plan => plan.id === selectedPlanId) || plans[0];
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (mode === "create") {
+      // Create new member
+      const newMember = {
+        name,
+        email,
+        phone,
+        joinDate,
+        membershipPlan: selectedPlan as MembershipPlan,
+        paymentMethod
+      };
+      
+      addMember(newMember);
+      navigate("/members");
+    } else if (existingMember) {
+      // Update existing member
+      const updatedMember = {
+        ...existingMember,
+        name,
+        email,
+        phone
+      };
+      
+      updateMember(updatedMember);
+      navigate(`/members/${existingMember.id}`);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter member name"
+            required
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email address"
+            required
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Enter phone number"
+            required
+          />
+        </div>
+        
+        {mode === "create" && (
+          <>
+            <div>
+              <Label>Join Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !joinDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {joinDate ? format(joinDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={joinDate}
+                    onSelect={(date) => date && setJoinDate(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div>
+              <Label htmlFor="plan">Membership Plan</Label>
+              <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                <SelectTrigger id="plan">
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} - {formatIndianRupee(plan.amount)} / {plan.durationMonths} month(s)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPlan && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedPlan.description}
+                </p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="payment-method">Payment Method</Label>
+              <Select 
+                value={paymentMethod} 
+                onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
+              >
+                <SelectTrigger id="payment-method">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PaymentMethod.CASH}>Cash</SelectItem>
+                  <SelectItem value={PaymentMethod.CARD}>Card</SelectItem>
+                  <SelectItem value={PaymentMethod.UPI}>UPI</SelectItem>
+                  <SelectItem value={PaymentMethod.BANK_TRANSFER}>Bank Transfer</SelectItem>
+                  <SelectItem value={PaymentMethod.OTHER}>Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+      </div>
+      
+      <div className="flex gap-4">
+        <Button type="submit">
+          {mode === "create" ? "Add Member" : "Update Member"}
+        </Button>
+        
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => navigate(-1)}
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
