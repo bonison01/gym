@@ -17,8 +17,8 @@ export const useRealTimeMembers = () => {
     const fetchPlans = async () => {
       try {
         const { data, error } = await supabase
-          .from("membership_plans")
-          .select("*") as { data: SupabaseMembershipPlan[], error: any };
+          .from('membership_plans')
+          .select('*') as { data: SupabaseMembershipPlan[], error: any };
         
         if (error) {
           throw error;
@@ -52,8 +52,8 @@ export const useRealTimeMembers = () => {
         
         // Fetch members
         const { data: membersData, error: membersError } = await supabase
-          .from("gym_members")
-          .select("*") as { data: SupabaseGymMember[], error: any };
+          .from('gym_members')
+          .select('*') as { data: SupabaseGymMember[], error: any };
           
         if (membersError) {
           throw membersError;
@@ -63,9 +63,9 @@ export const useRealTimeMembers = () => {
           // Fetch payment data for each member
           const memberIds = membersData.map((m: any) => m.id);
           const { data: paymentsData, error: paymentsError } = await supabase
-            .from("payments")
-            .select("*")
-            .in("member_id", memberIds) as { data: any[], error: any };
+            .from('payments')
+            .select('*')
+            .in('member_id', memberIds) as { data: any[], error: any };
             
           if (paymentsError) {
             throw paymentsError;

@@ -9,6 +9,59 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      gym_members: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          join_date: string
+          membership_plan_id: string
+          name: string
+          payment_method: string
+          phone: string
+          status: string
+          subscription_end_date: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          join_date: string
+          membership_plan_id: string
+          name: string
+          payment_method: string
+          phone: string
+          status: string
+          subscription_end_date: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          join_date?: string
+          membership_plan_id?: string
+          name?: string
+          payment_method?: string
+          phone?: string
+          status?: string
+          subscription_end_date?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_members_membership_plan_id_fkey"
+            columns: ["membership_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           caption: string | null
@@ -40,6 +93,74 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_plans: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string
+          duration_months: number
+          id: string
+          name: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description: string
+          duration_months: number
+          id?: string
+          name: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string
+          duration_months?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          date: string
+          id: string
+          member_id: string
+          method: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          date: string
+          id?: string
+          member_id: string
+          method: string
+          notes?: string | null
+          status: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          date?: string
+          id?: string
+          member_id?: string
+          method?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "gym_members"
             referencedColumns: ["id"]
           },
         ]

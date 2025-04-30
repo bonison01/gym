@@ -57,7 +57,7 @@ export const useInitializeGym = () => {
           
           const { error: insertError } = await supabase
             .from('membership_plans')
-            .insert(defaultPlans as any) as { error: any };
+            .insert(defaultPlans) as { error: any };
             
           if (insertError) {
             throw insertError;
