@@ -252,12 +252,12 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
             
             <div>
               <Label htmlFor="referral">Referred By (Optional)</Label>
-              <Select value={referredById} onValueChange={setReferredById}>
+              <Select value={referredById || "none"} onValueChange={(value) => setReferredById(value === "none" ? "" : value)}>
                 <SelectTrigger id="referral">
                   <SelectValue placeholder="Select referring member" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.name} - {member.email}
