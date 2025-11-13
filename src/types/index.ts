@@ -9,7 +9,12 @@ export type Member = {
   paymentHistory: Payment[];
   status: MemberStatus;
   photo?: string;
-  paymentMethod?: PaymentMethod; // Add this optional field to Member type
+  paymentMethod?: PaymentMethod;
+  address?: string;
+  gender?: string;
+  age?: number;
+  referredById?: string;
+  referralCommission?: number;
 }
 
 export type MembershipPlan = {

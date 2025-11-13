@@ -97,6 +97,11 @@ export const useRealTimeMembers = () => {
               name: member.name,
               email: member.email,
               phone: member.phone,
+              address: member.address,
+              gender: member.gender,
+              age: member.age,
+              referredById: member.referred_by_id,
+              referralCommission: member.referral_commission ? Number(member.referral_commission) : 0,
               joinDate: new Date(member.join_date),
               membershipPlan: memberPlan as MembershipPlan,
               subscriptionEndDate: new Date(member.subscription_end_date),
@@ -146,6 +151,11 @@ export const useRealTimeMembers = () => {
               name: newMember.name,
               email: newMember.email,
               phone: newMember.phone,
+              address: newMember.address,
+              gender: newMember.gender,
+              age: newMember.age,
+              referredById: newMember.referred_by_id,
+              referralCommission: newMember.referral_commission ? Number(newMember.referral_commission) : 0,
               joinDate: new Date(newMember.join_date),
               membershipPlan: memberPlan as MembershipPlan,
               subscriptionEndDate: new Date(newMember.subscription_end_date),
@@ -171,6 +181,11 @@ export const useRealTimeMembers = () => {
                   name: updatedMember.name,
                   email: updatedMember.email,
                   phone: updatedMember.phone,
+                  address: updatedMember.address,
+                  gender: updatedMember.gender,
+                  age: updatedMember.age,
+                  referredById: updatedMember.referred_by_id,
+                  referralCommission: updatedMember.referral_commission ? Number(updatedMember.referral_commission) : 0,
                   joinDate: new Date(updatedMember.join_date),
                   membershipPlan: memberPlan,
                   subscriptionEndDate: new Date(updatedMember.subscription_end_date),
@@ -223,11 +238,16 @@ export const useRealTimeMembers = () => {
           name: memberData.name,
           email: memberData.email,
           phone: memberData.phone,
+          address: memberData.address,
+          gender: memberData.gender,
+          age: memberData.age,
+          referred_by_id: memberData.referredById,
           join_date: memberData.joinDate.toISOString(),
           membership_plan_id: memberData.membershipPlan.id,
           subscription_end_date: subscriptionEndDate.toISOString(),
           status: status,
-          payment_method: memberData.paymentMethod
+          payment_method: memberData.paymentMethod,
+          referral_commission: 0
         })
         .select()
         .single() as { data: any, error: any };
@@ -247,12 +267,48 @@ export const useRealTimeMembers = () => {
           notes: 'Initial membership payment'
         };
         
-        const { error: paymentError } = await supabase
+        const { data: paymentDataResult, error: paymentError } = await supabase
           .from('payments')
-          .insert(paymentData) as { error: any };
+          .insert(paymentData)
+          .select()
+          .single() as { data: any, error: any };
           
         if (paymentError) {
           console.error("Error creating payment record:", paymentError);
+        }
+        
+        // If member was referred, create commission record (10% of payment)
+        if (memberData.referredById && paymentDataResult) {
+          const commissionAmount = memberData.membershipPlan.amount * 0.1;
+          
+          const { error: commissionError } = await supabase
+            .from('commissions')
+            .insert({
+              referrer_id: memberData.referredById,
+              referred_member_id: data.id,
+              amount: commissionAmount,
+              payment_id: paymentDataResult.id,
+              status: 'pending'
+            });
+            
+          if (commissionError) {
+            console.error("Error creating commission record:", commissionError);
+          } else {
+            // Update referrer's commission balance
+            const { data: referrerData } = await supabase
+              .from('gym_members')
+              .select('referral_commission')
+              .eq('id', memberData.referredById)
+              .single() as { data: any };
+              
+            if (referrerData) {
+              const currentCommission = Number(referrerData.referral_commission) || 0;
+              await supabase
+                .from('gym_members')
+                .update({ referral_commission: currentCommission + commissionAmount })
+                .eq('id', memberData.referredById);
+            }
+          }
         }
       }
       
@@ -272,6 +328,9 @@ export const useRealTimeMembers = () => {
           name: updatedMember.name,
           email: updatedMember.email,
           phone: updatedMember.phone,
+          address: updatedMember.address,
+          gender: updatedMember.gender,
+          age: updatedMember.age,
           payment_method: updatedMember.paymentMethod
         })
         .eq('id', updatedMember.id) as { error: any };

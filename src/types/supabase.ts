@@ -23,6 +23,11 @@ export interface SupabaseGymMember {
   created_at: string;
   updated_at: string;
   user_id?: string;
+  address?: string;
+  gender?: string;
+  age?: number;
+  referred_by_id?: string;
+  referral_commission?: number;
 }
 
 export interface SupabasePayment {
@@ -36,9 +41,20 @@ export interface SupabasePayment {
   created_at: string;
 }
 
+export interface SupabaseCommission {
+  id: string;
+  referrer_id: string;
+  referred_member_id: string;
+  amount: number;
+  payment_id?: string;
+  created_at: string;
+  status: string;
+}
+
 // Type to extend Supabase database definition with our custom tables
 export interface SupabaseTables {
   gym_members: SupabaseGymMember;
   membership_plans: SupabaseMembershipPlan;
   payments: SupabasePayment;
+  commissions: SupabaseCommission;
 }

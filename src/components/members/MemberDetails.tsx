@@ -113,6 +113,18 @@ export function MemberDetails({ member }: MemberDetailsProps) {
             <p className="text-sm font-medium">Contact Information</p>
             <p className="text-sm text-gray-500">Email: {member.email}</p>
             <p className="text-sm text-gray-500">Phone: {member.phone}</p>
+            {member.address && (
+              <p className="text-sm text-gray-500">Address: {member.address}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Personal Details</p>
+            {member.gender && (
+              <p className="text-sm text-gray-500">Gender: {member.gender}</p>
+            )}
+            {member.age && (
+              <p className="text-sm text-gray-500">Age: {member.age} years</p>
+            )}
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium">Membership Details</p>
@@ -123,6 +135,18 @@ export function MemberDetails({ member }: MemberDetailsProps) {
               Cost: {formatIndianRupee(member.membershipPlan.amount)}
             </p>
           </div>
+          
+          {(member.referralCommission && member.referralCommission > 0) && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Referral Commission</p>
+              <p className="text-sm text-green-600 font-semibold">
+                {formatIndianRupee(member.referralCommission)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Earned from referrals
+              </p>
+            </div>
+          )}
           
           <div className="space-y-1">
             <p className="text-sm font-medium">Subscription Status</p>

@@ -26,12 +26,16 @@ interface MemberFormProps {
 }
 
 export function MemberForm({ existingMember, mode }: MemberFormProps) {
-  const { plans, addMember, updateMember, loading } = useAppContext();
+  const { plans, addMember, updateMember, loading, members } = useAppContext();
   const navigate = useNavigate();
   
   const [name, setName] = useState(existingMember?.name || "");
   const [email, setEmail] = useState(existingMember?.email || "");
   const [phone, setPhone] = useState(existingMember?.phone || "");
+  const [address, setAddress] = useState(existingMember?.address || "");
+  const [gender, setGender] = useState(existingMember?.gender || "");
+  const [age, setAge] = useState(existingMember?.age?.toString() || "");
+  const [referredById, setReferredById] = useState(existingMember?.referredById || "");
   const [joinDate, setJoinDate] = useState<Date>(existingMember?.joinDate || new Date());
   const [selectedPlanId, setSelectedPlanId] = useState(
     existingMember?.membershipPlan.id || plans[0]?.id || ""
@@ -61,6 +65,10 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
           name,
           email,
           phone,
+          address,
+          gender,
+          age: age ? parseInt(age) : undefined,
+          referredById: referredById || undefined,
           joinDate,
           membershipPlan: selectedPlan as MembershipPlan,
           paymentMethod
@@ -75,6 +83,9 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
           name,
           email,
           phone,
+          address,
+          gender,
+          age: age ? parseInt(age) : undefined,
           paymentMethod
         };
         
@@ -130,6 +141,43 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Enter phone number"
             required
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Enter address"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="gender">Gender</Label>
+          <Select value={gender} onValueChange={setGender}>
+            <SelectTrigger id="gender">
+              <SelectValue placeholder="Select gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Male">Male</SelectItem>
+              <SelectItem value="Female">Female</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <Label htmlFor="age">Age</Label>
+          <Input
+            id="age"
+            type="number"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            placeholder="Enter age"
+            min="1"
+            max="150"
           />
         </div>
         
@@ -200,6 +248,26 @@ export function MemberForm({ existingMember, mode }: MemberFormProps) {
                   <SelectItem value={PaymentMethod.OTHER}>Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="referral">Referred By (Optional)</Label>
+              <Select value={referredById} onValueChange={setReferredById}>
+                <SelectTrigger id="referral">
+                  <SelectValue placeholder="Select referring member" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name} - {member.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-1">
+                The referring member will receive commission on payments
+              </p>
             </div>
           </>
         )}
