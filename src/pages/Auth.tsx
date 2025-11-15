@@ -92,7 +92,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-fitlife-700">
-            FitLife<span className="text-fitlife-500">Tracker</span>
+            Gym Member<span className="text-fitlife-500">Tracker</span>
           </CardTitle>
           <CardDescription>
             Login or sign up to manage your gym
